@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"project/hash"
-	"project/structs"
+	"Dech-Node/hash"
+	"Dech-Node/structs"
 	"time"
 )
 
