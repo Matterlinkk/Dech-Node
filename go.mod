@@ -1,4 +1,4 @@
-module project
+module Dech-Node
 
 go 1.21.3
 
