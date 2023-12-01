@@ -3,9 +3,9 @@ package operations
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Matterlinkk/Dech-Node/structs"
+	"github.com/Matterlinkk/Dech-Wallet/hash"
 	"log"
-	"Dech-Node/hash"
-	"Dech-Node/structs"
 	"time"
 )
 
