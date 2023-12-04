@@ -38,5 +38,4 @@ func main() {
 	nodeOp.AddBlock(&blockchain, *block1)
 
 	nodeOp.BlockKeyPair(blockchain)
-
 }

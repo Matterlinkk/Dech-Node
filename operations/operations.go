@@ -8,7 +8,6 @@ import (
 	walletOperations "github.com/Matterlinkk/Dech-Wallet/operations"
 	walletStructs "github.com/Matterlinkk/Dech-Wallet/structs"
 	"log"
-	"math/big"
 	"time"
 )
 
@@ -27,18 +26,6 @@ func CreateTransaction(sender, receiver *nodeStructs.User, data string, signatur
 		Data:          data,
 		Signature:     signature,
 		Nonce:         sender.Nonce,
-	}
-}
-
-func CreateUser(privateKey *big.Int) *nodeStructs.User {
-	keyPair := walletOperations.GetKeyPair(privateKey)
-
-	return &nodeStructs.User{
-		Id:         keyPair.PublicKey,
-		Nonce:      0,
-		PublicKey:  keyPair.PublicKey,
-		PrivateKey: keyPair.PrivateKey,
-		Balance:    0,
 	}
 }
 
