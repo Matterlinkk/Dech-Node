@@ -1,7 +1,9 @@
 package transaction
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/Matterlinkk/Dech-Node/user"
 	"github.com/Matterlinkk/Dech-Wallet/hash"
 	"github.com/Matterlinkk/Dech-Wallet/structs"
 	"time"
@@ -33,4 +35,12 @@ func CreateTransaction(sender, receiver *user.User, data string, signature struc
 		Signature:     signature,
 		Nonce:         sender.Nonce,
 	}
+}
+
+func TransactionsKeyPair(tnx []Transaction) (string, error) {
+	jsonData, err := json.Marshal(tnx)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData), nil
 }

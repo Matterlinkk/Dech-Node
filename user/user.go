@@ -1,6 +1,8 @@
 package user
 
 import (
+	"encoding/json"
+	"fmt"
 	walletOperations "github.com/Matterlinkk/Dech-Wallet/operations"
 	"github.com/Matterlinkk/Dech-Wallet/structs"
 	"math/big"
@@ -14,12 +16,7 @@ type User struct {
 	Balance    uint32
 }
 
-func (u *User) IncreaseNonce() uint32 {
-	u.Nonce++
-	return u.Nonce
-}
-
-func (u *User) CreateUser(privateKey *big.Int) *User {
+func CreateUser(privateKey *big.Int) *User {
 	keyPair := walletOperations.GetKeyPair(privateKey)
 
 	return &User{
@@ -29,4 +26,18 @@ func (u *User) CreateUser(privateKey *big.Int) *User {
 		PrivateKey: keyPair.PrivateKey,
 		Balance:    0,
 	}
+}
+
+func (u *User) KeyPair() {
+	jsonData, err := json.MarshalIndent(u, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return
+	}
+	fmt.Println(string(jsonData) + "\n")
+}
+
+func (u *User) IncreaseNonce() uint32 {
+	u.Nonce++
+	return u.Nonce
 }

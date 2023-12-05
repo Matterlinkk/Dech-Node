@@ -1,21 +1,23 @@
 package main
 
 import (
-	nodeOp "github.com/Matterlinkk/Dech-Node/operations"
-	nodeStruct "github.com/Matterlinkk/Dech-Node/structs"
+	"github.com/Matterlinkk/Dech-Node/block"
+	"github.com/Matterlinkk/Dech-Node/blockchain"
+	"github.com/Matterlinkk/Dech-Node/transaction"
+	"github.com/Matterlinkk/Dech-Node/user"
 	walletOp "github.com/Matterlinkk/Dech-Wallet/operations"
 	"math/big"
 )
 
 func main() {
 
-	blockchain := make([]nodeStruct.Block, 0)
+	blockchainArray := blockchain.CreateBlockchain()
 
 	sashkaPrivate := big.NewInt(132132)
-	sashka := nodeOp.CreateUser(sashkaPrivate)
+	sashka := user.CreateUser(sashkaPrivate)
 
-	ilyaKeys := big.NewInt(13213132)
-	ilya := nodeOp.CreateUser(ilyaKeys)
+	ilyaPrivate := big.NewInt(132321231231312)
+	ilya := user.CreateUser(ilyaPrivate)
 
 	secret := walletOp.GetSharedSecret(sashka.Id, ilya.PrivateKey)
 
@@ -23,19 +25,19 @@ func main() {
 	encryptedM := walletOp.GetEncryptedMessage(secret, m)
 
 	signature1, _ := walletOp.SignMessage(encryptedM, ilya.PrivateKey, *ilya.Id)
-	tnx1 := nodeOp.CreateTransaction(ilya, sashka, encryptedM, *signature1)
+	tnx1 := transaction.CreateTransaction(ilya, sashka, encryptedM, *signature1)
 
 	signature2, _ := walletOp.SignMessage(encryptedM, sashka.PrivateKey, *sashka.Id)
-	tnx2 := nodeOp.CreateTransaction(sashka, ilya, encryptedM, *signature2)
+	tnx2 := transaction.CreateTransaction(sashka, ilya, encryptedM, *signature2)
 
-	block := nodeOp.CreateBlock()
-	nodeOp.AddTnx(block, tnx1)
+	b := block.CreateBlock()
+	b.AddTnx(tnx1)
 
-	block1 := nodeOp.CreateBlock()
-	nodeOp.AddTnx(block1, tnx2)
+	b1 := block.CreateBlock()
+	b1.AddTnx(tnx2)
 
-	nodeOp.AddBlock(&blockchain, *block)
-	nodeOp.AddBlock(&blockchain, *block1)
+	blockchainArray.AddBlock(*b1)
+	blockchainArray.AddBlock(*b)
 
-	nodeOp.BlockKeyPair(blockchain)
+	blockchainArray.KeyPair()
 }
