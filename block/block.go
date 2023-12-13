@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/Matterlinkk/Dech-Node/transaction"
 	"github.com/Matterlinkk/Dech-Wallet/hash"
-	walletOperations "github.com/Matterlinkk/Dech-Wallet/operations"
+	"github.com/Matterlinkk/Dech-Wallet/signature"
 	"log"
 )
 
@@ -24,7 +24,7 @@ func CreateBlock() *Block {
 }
 
 func (block *Block) AddTnx(tnx *transaction.Transaction) {
-	verify := walletOperations.VerifySignature(&tnx.Signature, tnx.Data, tnx.From)
+	verify := signature.VerifySignature(tnx.Signature, tnx.Data, tnx.FromPublicKey.PublicKey)
 	if verify {
 		block.SetOfTransactions = append(block.SetOfTransactions, *tnx)
 	}

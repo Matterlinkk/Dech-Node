@@ -3,28 +3,35 @@ package user
 import (
 	"encoding/json"
 	"fmt"
-	walletOperations "github.com/Matterlinkk/Dech-Wallet/operations"
-	"github.com/Matterlinkk/Dech-Wallet/structs"
+	"github.com/Matterlinkk/Dech-Wallet/keys"
+	"github.com/Matterlinkk/Dech-Wallet/publickey"
 	"math/big"
 )
 
 type User struct {
-	Id         *structs.Point
+	Id         string
 	Nonce      uint32
-	PublicKey  *structs.Point
+	PublicKey  publickey.PublicKey
 	PrivateKey *big.Int
 	Balance    uint32
 }
 
-func CreateUser(privateKey *big.Int) *User {
-	keyPair := walletOperations.GetKeyPair(privateKey)
+func CreateUser(privateKey *big.Int, num string) *User {
+	keyPair := keys.GetKeys(privateKey)
 
 	return &User{
-		Id:         keyPair.PublicKey,
+		Id:         keyPair.PublicKey.GetAdress(), //number
 		Nonce:      0,
-		PublicKey:  keyPair.PublicKey,
+		PublicKey:  *keyPair.PublicKey,
 		PrivateKey: keyPair.PrivateKey,
 		Balance:    0,
+	}
+}
+
+func (u *User) GetKeys() keys.KeyPair {
+	return keys.KeyPair{
+		PrivateKey: u.PrivateKey,
+		PublicKey:  &u.PublicKey,
 	}
 }
 
