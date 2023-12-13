@@ -3,10 +3,11 @@ package block
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Matterlinkk/Dech-Node/blockchain"
 	"github.com/Matterlinkk/Dech-Node/transaction"
 	"github.com/Matterlinkk/Dech-Wallet/hash"
-	"github.com/Matterlinkk/Dech-Wallet/signature"
 	"log"
+	"sync"
 )
 
 type Block struct {
@@ -15,44 +16,40 @@ type Block struct {
 	SetOfTransactions []transaction.Transaction
 }
 
-func CreateBlock() *Block {
-	return &Block{
-		BlockId:           "",
-		PrevHash:          "",
-		SetOfTransactions: make([]transaction.Transaction, 0),
-	}
+type Blockchain struct {
+	sync.Mutex
+	BlockArray []Block
 }
 
-func (block *Block) AddTnx(tnx *transaction.Transaction) {
-	verify := signature.VerifySignature(tnx.Signature, tnx.Data, tnx.FromPublicKey.PublicKey)
-	if verify {
-		block.SetOfTransactions = append(block.SetOfTransactions, *tnx)
-	}
-}
-
-func (block *Block) AddBlock(blockchain *[]Block) {
-
-	jsonString, err := transaction.TransactionsKeyPair(block.SetOfTransactions)
+func CreateBlock(sot []transaction.Transaction, blockchain *blockchain.Blockchain) *Block {
+	jsonString, err := transaction.TransactionsKeyPair(sot)
 
 	if err != nil {
-		log.Panicf("Ошибка при преобразовании в JSON: %v", err)
+		log.Panicf("Ошибка при преобразовании в JSON: %s", err)
 	}
 
-	if len(*blockchain) == 0 {
+	if len(blockchain.BlockArray) == 0 {
 		blockId := hash.SHA1("" + jsonString)
-		block.BlockId = fmt.Sprintf("%x", blockId)
-		block.PrevHash = ""
-		*blockchain = append(*blockchain, *block)
-		return
+		blockIdStr := fmt.Sprintf("%x", blockId)
+		prevHash := ""
+		return &Block{
+			BlockId:           blockIdStr,
+			PrevHash:          prevHash,
+			SetOfTransactions: sot,
+		}
 	}
 
 	// Calculate the new block's ID and set the PrevHash
-	blockId := hash.SHA1((*blockchain)[len(*blockchain)-1].BlockId + jsonString)
-	block.BlockId = fmt.Sprintf("%x", blockId)
-	block.PrevHash = (*blockchain)[len(*blockchain)-1].BlockId
+	blockId := hash.SHA1(blockchain.GetLastBlock().BlockId + jsonString)
+	blockIdStr := fmt.Sprintf("%x", blockId)
+	prevHash := blockchain.GetLastBlock().BlockId
 
 	// Append the new block to the blockchain
-	*blockchain = append(*blockchain, *block)
+	return &Block{
+		BlockId:           blockIdStr,
+		PrevHash:          prevHash,
+		SetOfTransactions: sot,
+	}
 }
 
 func (block *Block) KeyPair() string {
@@ -60,9 +57,30 @@ func (block *Block) KeyPair() string {
 	return string(jsonData)
 }
 
-func BlockKeyPair(block []Block) {
-	for i := range block {
-		jsonData, _ := json.Marshal(block[i])
-		fmt.Println(string(jsonData) + "\n")
+func CreateBlockchain() *Blockchain {
+	return &Blockchain{
+		BlockArray: make([]Block, 0),
 	}
+}
+
+func (bc *Blockchain) GetLastBlock() Block {
+	if len(bc.BlockArray) == 0 {
+		panic("Length is 0")
+	}
+	return bc.BlockArray[len(bc.BlockArray)-1]
+}
+
+func (bc *Blockchain) AddBlock(block Block) {
+
+	bc.BlockArray = append(bc.BlockArray, block)
+	return
+
+}
+
+func (bc *Blockchain) KeyPair() {
+	jsonData, err := json.Marshal(bc.BlockArray)
+	if err != nil {
+		fmt.Sprintf("Error: %s", err)
+	}
+	fmt.Println(string(jsonData))
 }

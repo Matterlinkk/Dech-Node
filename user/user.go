@@ -16,7 +16,7 @@ type User struct {
 	Balance    uint32
 }
 
-func CreateUser(privateKey *big.Int, num string) *User {
+func CreateUser(privateKey *big.Int) *User {
 	keyPair := keys.GetKeys(privateKey)
 
 	return &User{
