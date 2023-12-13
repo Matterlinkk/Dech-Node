@@ -26,8 +26,8 @@ func main() {
 	sot = append(sot, *tnx2)
 
 	block1 := block.CreateBlock(sot, db)
-	block2 := block.CreateBlock(sot, db)
 	db.AddBlock(*block1)
+	block2 := block.CreateBlock(sot, db)
 	db.AddBlock(*block2)
 
 	db.KeyPair()

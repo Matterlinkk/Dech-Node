@@ -3,7 +3,6 @@ package block
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Matterlinkk/Dech-Node/blockchain"
 	"github.com/Matterlinkk/Dech-Node/transaction"
 	"github.com/Matterlinkk/Dech-Wallet/hash"
 	"log"
@@ -21,14 +20,14 @@ type Blockchain struct {
 	BlockArray []Block
 }
 
-func CreateBlock(sot []transaction.Transaction, blockchain *blockchain.Blockchain) *Block {
+func CreateBlock(sot []transaction.Transaction, bc *Blockchain) *Block {
 	jsonString, err := transaction.TransactionsKeyPair(sot)
 
 	if err != nil {
 		log.Panicf("Ошибка при преобразовании в JSON: %s", err)
 	}
 
-	if len(blockchain.BlockArray) == 0 {
+	if len(bc.BlockArray) == 0 {
 		blockId := hash.SHA1("" + jsonString)
 		blockIdStr := fmt.Sprintf("%x", blockId)
 		prevHash := ""
@@ -40,9 +39,9 @@ func CreateBlock(sot []transaction.Transaction, blockchain *blockchain.Blockchai
 	}
 
 	// Calculate the new block's ID and set the PrevHash
-	blockId := hash.SHA1(blockchain.GetLastBlock().BlockId + jsonString)
+	blockId := hash.SHA1(bc.GetLastBlock().BlockId + jsonString)
 	blockIdStr := fmt.Sprintf("%x", blockId)
-	prevHash := blockchain.GetLastBlock().BlockId
+	prevHash := bc.GetLastBlock().BlockId
 
 	// Append the new block to the blockchain
 	return &Block{
@@ -78,9 +77,12 @@ func (bc *Blockchain) AddBlock(block Block) {
 }
 
 func (bc *Blockchain) KeyPair() {
-	jsonData, err := json.Marshal(bc.BlockArray)
-	if err != nil {
-		fmt.Sprintf("Error: %s", err)
+	for _, block := range bc.BlockArray {
+		jsonData, err := json.Marshal(block)
+		if err != nil {
+			fmt.Printf("Error: %s", err)
+			return
+		}
+		fmt.Println(string(jsonData) + "\n")
 	}
-	fmt.Println(string(jsonData))
 }
