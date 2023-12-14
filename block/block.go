@@ -86,3 +86,12 @@ func (bc *Blockchain) KeyPair() {
 		fmt.Println(string(jsonData) + "\n")
 	}
 }
+
+func CreateSetOfTransactions() []transaction.Transaction {
+	set := make([]transaction.Transaction, 0)
+	return set
+}
+
+func DeleteSetOfTransactions(setOfTransactions []transaction.Transaction) []transaction.Transaction {
+	return setOfTransactions[:0]
+}
