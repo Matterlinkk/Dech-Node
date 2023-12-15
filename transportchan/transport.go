@@ -33,7 +33,6 @@ func ProcessBlock(chanBlock chan block.Block, chanTnx chan transaction.Transacti
 			case tnx := <-chanTnx:
 				set = append(set, tnx)
 			case <-timer.C:
-				fmt.Println("Creating block")
 				newBlock := block.CreateBlock(set, db)
 				fmt.Println("Block: ", newBlock)
 				BlockToBlockchain(chanBlock, *newBlock)

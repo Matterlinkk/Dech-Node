@@ -73,7 +73,6 @@ func (bc *Blockchain) AddBlock(block Block) {
 
 	bc.BlockArray = append(bc.BlockArray, block)
 	return
-
 }
 
 func (bc *Blockchain) KeyPair() {
@@ -90,8 +89,4 @@ func (bc *Blockchain) KeyPair() {
 func CreateSetOfTransactions() []transaction.Transaction {
 	set := make([]transaction.Transaction, 0)
 	return set
-}
-
-func DeleteSetOfTransactions(setOfTransactions []transaction.Transaction) []transaction.Transaction {
-	return setOfTransactions[:0]
 }

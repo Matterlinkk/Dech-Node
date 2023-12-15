@@ -20,7 +20,7 @@ func CreateUser(privateKey *big.Int) *User {
 	keyPair := keys.GetKeys(privateKey)
 
 	return &User{
-		Id:         keyPair.PublicKey.GetAdress(), //number
+		Id:         keyPair.PublicKey.GetAdress(),
 		Nonce:      0,
 		PublicKey:  *keyPair.PublicKey,
 		PrivateKey: keyPair.PrivateKey,

@@ -2,43 +2,37 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/Matterlinkk/Dech-Node/block"
 	"github.com/Matterlinkk/Dech-Node/transaction"
+	"github.com/Matterlinkk/Dech-Node/transportchan"
 	"github.com/Matterlinkk/Dech-Node/user"
-	"github.com/Matterlinkk/Dech-Wallet/keys"
 	"github.com/Matterlinkk/Dech-Wallet/signature"
 	"github.com/go-chi/chi"
-	"log"
 	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-var tnxSlice []transaction.Transaction
-
-var db []user.User
-
-func AddTnx(w http.ResponseWriter, r *http.Request) {
+func AddTnx(w http.ResponseWriter, r *http.Request, userDB []user.User, tnxChannel chan transaction.Transaction) {
 	receiverIdStr := chi.URLParam(r, "receiver") //http://localhost:8080/tnx/create/1/0/message?data=wqe
 	receiverId, _ := strconv.Atoi(receiverIdStr)
 	senderIdStr := chi.URLParam(r, "sender")
 	senderId, _ := strconv.Atoi(senderIdStr)
 	message := r.URL.Query().Get("data")
 
-	signature := signature.SignMessage(message, db[senderId].GetKeys())
+	signature := signature.SignMessage(message, userDB[senderId].GetKeys())
 
-	tnx := transaction.CreateTransaction(&db[senderId], &db[receiverId], message, *signature)
+	tnx := transaction.CreateTransaction(&userDB[senderId], &userDB[receiverId], message, *signature)
 
-	transaction, _ := json.Marshal(tnx)
-
-	transactionString := strings.ReplaceAll(string(transaction), ",", "\n")
+	transportchan.TnxToBlock(tnxChannel, *tnx)
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(transactionString))
+	w.Write([]byte("Transaction successfully sent"))
 }
 
-func ShowDatabase(w http.ResponseWriter, r *http.Request) {
-	signatureJson, _ := json.Marshal(db)
+func ShowUserDatabase(w http.ResponseWriter, r *http.Request, userDB []user.User) {
+	signatureJson, _ := json.Marshal(userDB)
 
 	signatureString := strings.ReplaceAll(string(signatureJson), ",", "\n")
 
@@ -46,39 +40,25 @@ func ShowDatabase(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(signatureString))
 }
 
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+func CreateUser(w http.ResponseWriter, r *http.Request, userDB *[]user.User) {
 
 	pkString := r.URL.Query().Get("pk") //http://localhost:8080/user/create?pk=2
 	pK, _ := new(big.Int).SetString(pkString, 10)
 
-	idStr := r.URL.Query().Get("id")
+	newUser := user.CreateUser(pK)
 
-	newUser := user.CreateUser(pK, idStr)
-
-	db = append(db, *newUser)
+	*userDB = append(*userDB, *newUser)
 
 	w.WriteHeader(200)
-	w.Write([]byte("Success"))
+	w.Write([]byte("User successfully сreated"))
 }
 
-func SignMessageHandler(w http.ResponseWriter, r *http.Request) {
-	message := r.URL.Query().Get("message") //http://localhost:8080/message/sign/?message=q&pk=2
+func ShowBlockchain(w http.ResponseWriter, r *http.Request, db *block.Blockchain) {
 
-	privateKey := r.URL.Query().Get("pk")
+	dbJson, _ := json.Marshal(db)
 
-	pK, _ := new(big.Int).SetString(privateKey, 10)
-
-	key := keys.GetKeys(pK)
-
-	signature := signature.SignMessage(message, key)
-
-	log.Print(signature.GetSignature)
-
-	signatureJson, _ := json.Marshal(signature)
-
-	signatureString := strings.ReplaceAll(string(signatureJson), ",", "\n")
+	dbString := strings.ReplaceAll(string(dbJson), ",", "\n")
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(signatureString))
-
+	w.Write([]byte(dbString))
 }
