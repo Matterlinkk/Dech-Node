@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/Matterlinkk/Dech-Node/user"
 	"github.com/Matterlinkk/Dech-Wallet/hash"
+	"github.com/Matterlinkk/Dech-Wallet/keys"
+	"github.com/Matterlinkk/Dech-Wallet/operations"
 	"github.com/Matterlinkk/Dech-Wallet/publickey"
-	"github.com/Matterlinkk/Dech-Wallet/signature"
+	s "github.com/Matterlinkk/Dech-Wallet/signature"
 	"time"
 )
 
@@ -20,12 +22,24 @@ type Transaction struct {
 	Data          string
 	DataType      string
 	Nonce         uint32
-	Signature     signature.Signature
+	Signature     s.Signature
 }
 
-func CreateTransaction(sender, receiver *user.User, data string, signature signature.Signature) *Transaction {
+func CreateTransaction(sender, receiver *user.User, data string, signature s.Signature) *Transaction {
+
+	verify := s.VerifySignature(signature, data, sender.PublicKey.PublicKey)
+
+	if !verify {
+		return nil
+	}
+
 	timing := time.Now()
-	message := fmt.Sprintf("%v%v%v%v", timing, sender.Id, receiver.Id, sender.Nonce)
+
+	secret := keys.GetSharedSecret(receiver.PublicKey, sender.PrivateKey)
+
+	encryptedMessage := operations.GetEncryptedMessage(secret, data)
+
+	message := fmt.Sprintf("%v%v%v%v%s", timing, sender.Id, receiver.Id, sender.Nonce, encryptedMessage)
 	transactionHash := fmt.Sprintf("%x", hash.SHA1(message))
 
 	dt := checkType(data)
@@ -39,7 +53,7 @@ func CreateTransaction(sender, receiver *user.User, data string, signature signa
 		FromPublicKey: sender.PublicKey,
 		ToAdress:      receiver.Id,
 		ToPublicKey:   receiver.PublicKey,
-		Data:          data,
+		Data:          encryptedMessage,
 		DataType:      dt,
 		Signature:     signature,
 		Nonce:         sender.Nonce,

@@ -43,9 +43,10 @@ func ShowUserDatabase(w http.ResponseWriter, r *http.Request, userDB []user.User
 func CreateUser(w http.ResponseWriter, r *http.Request, userDB *[]user.User) {
 
 	pkString := r.URL.Query().Get("pk") //http://localhost:8080/user/create?pk=2
+	nickname := r.URL.Query().Get("nickname")
 	pK, _ := new(big.Int).SetString(pkString, 10)
 
-	newUser := user.CreateUser(pK)
+	newUser := user.CreateUser(pK, nickname)
 
 	*userDB = append(*userDB, *newUser)
 

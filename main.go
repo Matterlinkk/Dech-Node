@@ -44,6 +44,7 @@ func main() {
 	http.ListenAndServe(":8080", r)
 }
 
-//http://localhost:8080/user/create?pk=1
-//http://localhost:8080/user/create?pk=12321442112545512512
-//http://localhost:8080/tnx/create/1/0/message?data=wqe
+//http://localhost:8080/user/create?pk=123&nickname=Alice
+//http://localhost:8080/user/create?pk=321&nickname=Bob
+//http://localhost:8080/tnx/create/1/0/message?data=some_message
+//http://localhost:8080/blockchain/show

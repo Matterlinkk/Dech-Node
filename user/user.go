@@ -11,16 +11,18 @@ import (
 type User struct {
 	Id         string
 	Nonce      uint32
+	Nickname   string
 	PublicKey  publickey.PublicKey
 	PrivateKey *big.Int
 	Balance    uint32
 }
 
-func CreateUser(privateKey *big.Int) *User {
+func CreateUser(privateKey *big.Int, nickname string) *User {
 	keyPair := keys.GetKeys(privateKey)
 
 	return &User{
 		Id:         keyPair.PublicKey.GetAdress(),
+		Nickname:   nickname,
 		Nonce:      0,
 		PublicKey:  *keyPair.PublicKey,
 		PrivateKey: keyPair.PrivateKey,
