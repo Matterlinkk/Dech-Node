@@ -3,6 +3,7 @@ package transportchan
 import (
 	"fmt"
 	"github.com/Matterlinkk/Dech-Node/block"
+	"github.com/Matterlinkk/Dech-Node/message"
 	"github.com/Matterlinkk/Dech-Node/transaction"
 	"time"
 )
@@ -15,7 +16,7 @@ func TnxToBlock(setOfTnx chan transaction.Transaction, tnx transaction.Transacti
 	setOfTnx <- tnx
 }
 
-func ProcessBlock(chanBlock chan block.Block, chanTnx chan transaction.Transaction, db *block.Blockchain) {
+func ProcessBlock(chanBlock chan block.Block, chanTnx chan transaction.Transaction, db *block.Blockchain, messageMap *map[string][]message.Message) {
 	for {
 		set := block.CreateSetOfTransactions()
 
@@ -35,6 +36,8 @@ func ProcessBlock(chanBlock chan block.Block, chanTnx chan transaction.Transacti
 			case <-timer.C:
 				newBlock := block.CreateBlock(set, db)
 				fmt.Println("Block: ", newBlock)
+				message.ParseBlock(messageMap, *newBlock)
+				fmt.Println("MessageMap: ", messageMap)
 				BlockToBlockchain(chanBlock, *newBlock)
 				break CollectTransactions
 			}

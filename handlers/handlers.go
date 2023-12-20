@@ -7,23 +7,22 @@ import (
 	"github.com/Matterlinkk/Dech-Node/transportchan"
 	"github.com/Matterlinkk/Dech-Node/user"
 	"github.com/Matterlinkk/Dech-Wallet/signature"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"math/big"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
 func AddTnx(w http.ResponseWriter, r *http.Request, userDB []user.User, tnxChannel chan transaction.Transaction) {
-	receiverIdStr := chi.URLParam(r, "receiver") //http://localhost:8080/tnx/create/1/0/message?data=wqe
-	receiverId, _ := strconv.Atoi(receiverIdStr)
-	senderIdStr := chi.URLParam(r, "sender")
-	senderId, _ := strconv.Atoi(senderIdStr)
+	receiverStr := chi.URLParam(r, "receiver") //http://localhost:8080/tnx/create/alice/bob/message?data=wqe
+	senderStr := chi.URLParam(r, "sender")
+	sender := user.FindUser(senderStr, userDB)
+	receiver := user.FindUser(receiverStr, userDB)
 	message := r.URL.Query().Get("data")
 
-	signature := signature.SignMessage(message, userDB[senderId].GetKeys())
+	signature := signature.SignMessage(message, sender.GetKeys())
 
-	tnx := transaction.CreateTransaction(&userDB[senderId], &userDB[receiverId], message, *signature)
+	tnx := transaction.CreateTransaction(&sender, &receiver, message, *signature)
 
 	transportchan.TnxToBlock(tnxChannel, *tnx)
 
@@ -62,4 +61,26 @@ func ShowBlockchain(w http.ResponseWriter, r *http.Request, db *block.Blockchain
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(dbString))
+}
+
+func FindUser(w http.ResponseWriter, r *http.Request, db []user.User) {
+
+	user := chi.URLParam(r, "user")
+
+	var result string
+
+	for _, userStruct := range db {
+		if user == userStruct.Nickname {
+			userJson, _ := json.Marshal(userStruct)
+			result = strings.ReplaceAll(string(userJson), ",", "\n")
+		}
+	}
+
+	if len(result) != 0 {
+		w.WriteHeader(200)
+		w.Write([]byte(result))
+	} else {
+		w.WriteHeader(404)
+		w.Write([]byte("User not found"))
+	}
 }

@@ -50,3 +50,12 @@ func (u *User) IncreaseNonce() uint32 {
 	u.Nonce++
 	return u.Nonce
 }
+
+func FindUser(nickname string, userDB []User) User {
+	for _, u := range userDB {
+		if u.Nickname == nickname {
+			return u
+		}
+	}
+	return User{}
+}

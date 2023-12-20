@@ -42,7 +42,7 @@ func CreateTransaction(sender, receiver *user.User, data string, signature s.Sig
 	message := fmt.Sprintf("%v%v%v%v%s", timing, sender.Id, receiver.Id, sender.Nonce, encryptedMessage)
 	transactionHash := fmt.Sprintf("%x", hash.SHA1(message))
 
-	dt := checkType(data)
+	dt := CheckType(data)
 
 	sender.IncreaseNonce()
 
@@ -68,7 +68,7 @@ func TransactionsKeyPair(tnx []Transaction) (string, error) {
 	return string(jsonData), nil
 }
 
-func checkType(value interface{}) string {
+func CheckType(value interface{}) string {
 	switch value.(type) {
 	case string:
 		return "string"
