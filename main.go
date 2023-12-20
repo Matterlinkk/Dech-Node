@@ -45,8 +45,13 @@ func main() {
 	r.Get("/tnx/create/{sender}/{receiver}/message", func(w http.ResponseWriter, r *http.Request) {
 		handlers.AddTnx(w, r, UserDB, channelTnx)
 	})
+
 	r.Get("/blockchain/show", func(w http.ResponseWriter, r *http.Request) {
 		handlers.ShowBlockchain(w, r, db)
+	})
+
+	r.Get("/message/show/{from}/{to}", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetMessage(w, r, UserDB, *messageMap)
 	})
 
 	http.ListenAndServe(":8080", r)
