@@ -37,7 +37,7 @@ func ParseBlock(messageMap *map[string][]Message, block block.Block) *map[string
 	for _, tx := range block.SetOfTransactions {
 
 		message := CreateMessage(tx.Data, tx)
-		key := tx.FromAdress + "/" + tx.ToAdress
+		key := tx.FromAdress + ":" + tx.ToAdress
 		(*messageMap)[key] = append((*messageMap)[key], message)
 	}
 	return messageMap
