@@ -36,7 +36,7 @@ func ProcessBlock(chanBlock chan block.Block, chanTnx chan transaction.Transacti
 			case <-timer.C:
 				newBlock := block.CreateBlock(set, db)
 				fmt.Println("Block: ", newBlock)
-				message.ParseBlock(messageMap, *newBlock)
+				messageMap = message.ParseBlock(messageMap, *newBlock)
 				fmt.Println("MessageMap: ", messageMap)
 				BlockToBlockchain(chanBlock, *newBlock)
 				break CollectTransactions
