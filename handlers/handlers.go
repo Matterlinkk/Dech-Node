@@ -7,7 +7,6 @@ import (
 	"github.com/Matterlinkk/Dech-Node/transaction"
 	"github.com/Matterlinkk/Dech-Node/transportchan"
 	"github.com/Matterlinkk/Dech-Node/user"
-	"github.com/Matterlinkk/Dech-Wallet/keys"
 	"github.com/Matterlinkk/Dech-Wallet/signature"
 	"github.com/go-chi/chi/v5"
 	"math/big"
@@ -101,12 +100,10 @@ func GetMessage(w http.ResponseWriter, r *http.Request, userDB []user.User, mess
 		return
 	}
 
-	secret := keys.GetSharedSecret(user.FindByUser(to.Nickname, userDB).PublicKey, user.FindByUser(from.Nickname, userDB).PrivateKey)
-
 	var messagesStrings []string
 
 	for _, msg := range messages {
-		messagesStrings = append(messagesStrings, msg.ShowString(secret))
+		messagesStrings = append(messagesStrings, msg.ShowString())
 	}
 
 	msgJson, err := json.Marshal(messagesStrings)

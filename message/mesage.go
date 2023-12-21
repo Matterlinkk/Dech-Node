@@ -3,8 +3,6 @@ package message
 import (
 	"github.com/Matterlinkk/Dech-Node/block"
 	"github.com/Matterlinkk/Dech-Node/transaction"
-	"github.com/Matterlinkk/Dech-Wallet/operations"
-	"math/big"
 	"strings"
 	"time"
 )
@@ -21,14 +19,13 @@ func CreateMessage(data string, transaction transaction.Transaction) Message {
 	}
 }
 
-func (message Message) ShowString(secret *big.Int) string {
+func (message Message) ShowString() string {
 
-	msg := operations.GetDecryptedMessage(secret, message.data)
 	text := message.date.String()
 
 	index := strings.Index(text, ".")
 
-	return text[:index] + " " + msg
+	return text[:index] + " " + message.data
 }
 
 func CreateMessageMap() *map[string][]Message {
