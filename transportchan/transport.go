@@ -1,7 +1,6 @@
 package transportchan
 
 import (
-	"fmt"
 	"github.com/Matterlinkk/Dech-Node/block"
 	"github.com/Matterlinkk/Dech-Node/message"
 	"github.com/Matterlinkk/Dech-Node/transaction"
@@ -35,9 +34,8 @@ func ProcessBlock(chanBlock chan block.Block, chanTnx chan transaction.Transacti
 				set = append(set, tnx)
 			case <-timer.C:
 				newBlock := block.CreateBlock(set, db)
-				fmt.Println("Block: ", newBlock)
+				//fmt.Println("Block: ", newBlock)
 				messageMap = message.ParseBlock(messageMap, *newBlock)
-				fmt.Println("MessageMap: ", messageMap)
 				BlockToBlockchain(chanBlock, *newBlock)
 				break CollectTransactions
 			}
