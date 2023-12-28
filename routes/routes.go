@@ -37,6 +37,9 @@ func RegisterRoutes(r chi.Router, UserDB []user.User, blockchain *block.Blockcha
 		handlers.GetMessage(w, r, UserDB, *messageMap)
 	})
 
+	r.Get("/addressbook/show", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ShowAddressBook(w, r, "addressbook.json")
+	})
 }
 
 func CallHandler(address string) (int, string) {

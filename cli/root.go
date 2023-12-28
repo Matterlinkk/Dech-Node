@@ -84,4 +84,6 @@ func init() {
 	showMessage.Flags().String("from", "", "sender's nickname(from is alise)")
 	showMessage.Flags().String("to", "", "receiver's nickname(from is alise)")
 	rootCmd.AddCommand(showMessage)
+
+	rootCmd.AddCommand(addressBookCmd)
 }

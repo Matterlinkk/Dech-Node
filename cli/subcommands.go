@@ -71,3 +71,12 @@ var showMessage = &cobra.Command{
 		fmt.Printf("Status: %d\nBody:%s", status, text)
 	},
 }
+
+var addressBookCmd = &cobra.Command{
+	Use:   "addressbook",
+	Short: "Show map [nickname]address",
+	Run: func(cmd *cobra.Command, args []string) {
+		status, text := routes.CallHandler("http://localhost:8080/addressbook/show")
+		fmt.Printf("Status: %d\nBody:%s", status, text)
+	},
+}

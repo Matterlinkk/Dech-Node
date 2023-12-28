@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/Matterlinkk/Dech-Node/addressbook"
 	"github.com/Matterlinkk/Dech-Node/block"
 	"github.com/Matterlinkk/Dech-Node/message"
 	"github.com/Matterlinkk/Dech-Node/transaction"
@@ -47,6 +49,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request, userDB *[]user.User) {
 	pK, _ := new(big.Int).SetString(pkString, 10)
 
 	newUser := user.CreateUser(pK, nickname)
+
+	addressbook.AddKeyValue(newUser.Nickname, newUser.Id, "addressbook.json") //code stopped here
 
 	*userDB = append(*userDB, *newUser)
 
@@ -115,4 +119,26 @@ func GetMessage(w http.ResponseWriter, r *http.Request, userDB []user.User, mess
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(msgJson)
+}
+
+func ShowAddressBook(w http.ResponseWriter, r *http.Request, filename string) {
+	data, err := addressbook.LoadJSON(filename)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error loading address book: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	var lines []string
+	data.Mutex.Lock()
+	defer data.Mutex.Unlock()
+
+	for key, value := range data.AddressBook {
+		lines = append(lines, fmt.Sprintf("%s:%s", key, value))
+	}
+
+	response := strings.Join(lines, "\n")
+
+	w.Header().Set("Content-Type", "text/plain")
+
+	w.Write([]byte(response))
 }
