@@ -10,11 +10,10 @@ import (
 
 type User struct {
 	Id         string
-	Nonce      uint32
+	nonce      uint32
 	Nickname   string
 	PublicKey  publickey.PublicKey
-	PrivateKey *big.Int
-	Balance    uint32
+	privateKey *big.Int
 }
 
 func CreateUser(privateKey *big.Int, nickname string) *User {
@@ -23,18 +22,21 @@ func CreateUser(privateKey *big.Int, nickname string) *User {
 	return &User{
 		Id:         keyPair.PublicKey.GetAdress(),
 		Nickname:   nickname,
-		Nonce:      0,
+		nonce:      0,
 		PublicKey:  *keyPair.PublicKey,
-		PrivateKey: keyPair.PrivateKey,
-		Balance:    0,
+		privateKey: keyPair.PrivateKey,
 	}
 }
 
 func (u *User) GetKeys() keys.KeyPair {
 	return keys.KeyPair{
-		PrivateKey: u.PrivateKey,
+		PrivateKey: u.privateKey,
 		PublicKey:  &u.PublicKey,
 	}
+}
+
+func (u *User) GetPrivate() *big.Int {
+	return u.privateKey
 }
 
 func (u *User) KeyPair() {
@@ -47,8 +49,12 @@ func (u *User) KeyPair() {
 }
 
 func (u *User) IncreaseNonce() uint32 {
-	u.Nonce++
-	return u.Nonce
+	u.nonce++
+	return u.nonce
+}
+
+func (u *User) ShowNonce() uint32 {
+	return u.nonce
 }
 
 func FindByUser(nickname string, userDB []User) User {

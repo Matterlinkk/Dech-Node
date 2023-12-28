@@ -15,9 +15,9 @@ import (
 type Transaction struct {
 	TransactionID string
 	Time          time.Time
-	FromAdress    string
+	FromAddress   string
 	FromPublicKey publickey.PublicKey
-	ToAdress      string
+	ToAddress     string
 	ToPublicKey   publickey.PublicKey
 	Data          string
 	DataType      string
@@ -35,11 +35,11 @@ func CreateTransaction(sender, receiver *user.User, data string, signature s.Sig
 
 	timing := time.Now()
 
-	secret := keys.GetSharedSecret(receiver.PublicKey, sender.PrivateKey)
+	secret := keys.GetSharedSecret(receiver.PublicKey, sender.GetPrivate())
 
 	encryptedMessage := operations.GetEncryptedMessage(secret, data)
 
-	message := fmt.Sprintf("%v%v%v%v%s", timing, sender.Id, receiver.Id, sender.Nonce, encryptedMessage)
+	message := fmt.Sprintf("%v%v%v%v%s", timing, sender.Id, receiver.Id, sender.ShowNonce(), encryptedMessage)
 	transactionHash := fmt.Sprintf("%x", hash.SHA1(message))
 
 	dt := CheckType(data)
@@ -49,14 +49,14 @@ func CreateTransaction(sender, receiver *user.User, data string, signature s.Sig
 	return &Transaction{
 		TransactionID: transactionHash,
 		Time:          timing,
-		FromAdress:    sender.Id,
+		FromAddress:   sender.Id,
 		FromPublicKey: sender.PublicKey,
-		ToAdress:      receiver.Id,
+		ToAddress:     receiver.Id,
 		ToPublicKey:   receiver.PublicKey,
 		Data:          encryptedMessage,
 		DataType:      dt,
 		Signature:     signature,
-		Nonce:         sender.Nonce,
+		Nonce:         sender.ShowNonce(),
 	}
 }
 

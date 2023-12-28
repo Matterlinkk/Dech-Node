@@ -3,6 +3,7 @@ package addressbook
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Matterlinkk/Dech-Node/user"
 	"io/ioutil"
 	"log"
 	"os"
@@ -10,13 +11,13 @@ import (
 )
 
 type AddressBook struct {
-	AddressBook map[string]string //map[nickname]address
+	AddressBook map[string]user.User //map[nickname]address
 	sync.Mutex
 }
 
 func createAddressBook() *AddressBook {
 	return &AddressBook{
-		AddressBook: make(map[string]string),
+		AddressBook: make(map[string]user.User),
 	}
 }
 
@@ -61,13 +62,13 @@ func LoadJSON(filename string) (*AddressBook, error) {
 
 	err = json.Unmarshal(fileContent, &data.AddressBook)
 	if err != nil {
-		return &AddressBook{}, fmt.Errorf("error parsing JSON: %s", err)
+		return &AddressBook{}, fmt.Errorf("Error parsing JSON: %s", err)
 	}
 
 	return data, nil
 }
 
-func AddKeyValue(key, value, filename string) {
+func AddKeyValue(key string, value user.User, filename string) {
 	data, err := LoadJSON(filename)
 
 	if err != nil {

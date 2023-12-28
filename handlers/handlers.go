@@ -50,7 +50,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, userDB *[]user.User) {
 
 	newUser := user.CreateUser(pK, nickname)
 
-	addressbook.AddKeyValue(newUser.Nickname, newUser.Id, "addressbook.json") //code stopped here
+	addressbook.AddKeyValue(newUser.Nickname, *newUser, "addressbook.json") //code stopped here
 
 	*userDB = append(*userDB, *newUser)
 
@@ -128,17 +128,22 @@ func ShowAddressBook(w http.ResponseWriter, r *http.Request, filename string) {
 		return
 	}
 
-	var lines []string
+	entries := make(map[string]user.User)
+
 	data.Mutex.Lock()
 	defer data.Mutex.Unlock()
 
 	for key, value := range data.AddressBook {
-		lines = append(lines, fmt.Sprintf("%s:%s", key, value))
+		entries[key] = value
 	}
 
-	response := strings.Join(lines, "\n")
+	jsonResponse, err := json.Marshal(entries)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error creating JSON response: %s", err), http.StatusInternalServerError)
+		return
+	}
 
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Type", "application/json")
 
-	w.Write([]byte(response))
+	w.Write(jsonResponse)
 }
