@@ -17,9 +17,8 @@ import (
 	"strings"
 )
 
-func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.Transaction) { //fix after login logic
+func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.Transaction, sender user.User) { //fix after login logic
 	receiverStr := chi.URLParam(r, "receiver")
-	senderStr := chi.URLParam(r, "sender")
 
 	addressBook, err := addressbook.LoadJSON("addressbook.json")
 	if err != nil {
@@ -27,7 +26,6 @@ func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.
 		return
 	}
 
-	sender := addressBook.AddressBook[senderStr]
 	receiver := addressBook.AddressBook[receiverStr]
 
 	log.Printf("sender: %v\n", sender)
@@ -42,7 +40,7 @@ func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.
 
 	log.Printf("signature: %v\n", signature)
 
-	tnx := transaction.CreateTransaction(&sender, &receiver, message, *signature)
+	tnx := transaction.CreateTransaction(&sender, receiver, message, *signature)
 
 	transportchan.TnxToBlock(tnxChannel, *tnx)
 
@@ -54,9 +52,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	pkString := r.URL.Query().Get("pk")
 	nickname := r.URL.Query().Get("nickname")
+	password := r.URL.Query().Get("password")
 	pK, _ := new(big.Int).SetString(pkString, 10)
 
 	newUser := user.CreateUser(pK, nickname)
+
+	filename := fmt.Sprintf("%s.txt", nickname)
+
+	user.CreateUserFile(filename, password, *newUser)
 
 	addressbook.AddKeyValue(newUser.Nickname, *newUser, "addressbook.json")
 
@@ -141,7 +144,7 @@ func ShowAddressBook(w http.ResponseWriter, r *http.Request, filename string) {
 		return
 	}
 
-	entries := make(map[string]user.User)
+	entries := make(map[string]addressbook.TransactionReceiver)
 
 	data.Mutex.Lock()
 	defer data.Mutex.Unlock()
@@ -151,6 +154,34 @@ func ShowAddressBook(w http.ResponseWriter, r *http.Request, filename string) {
 	}
 
 	jsonResponse, err := json.Marshal(entries)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error creating JSON response: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	w.Write(jsonResponse)
+}
+
+func LoginUser(w http.ResponseWriter, r *http.Request, loggedUser *user.User) {
+	nickname := chi.URLParam(r, "nickname")
+	password := r.URL.Query().Get("password")
+
+	filename := fmt.Sprintf("%s.txt", nickname)
+
+	*loggedUser = user.ReadUserFile(filename, password)
+
+	fmt.Print(*loggedUser)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	inputText := fmt.Sprintf("Access accepted user is: %s", loggedUser.Nickname)
+	w.Write([]byte(inputText))
+}
+
+func ShowUserProfile(w http.ResponseWriter, r *http.Request, loggedUser *user.User) {
+	jsonResponse, err := json.Marshal(loggedUser)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error creating JSON response: %s", err), http.StatusInternalServerError)
 		return

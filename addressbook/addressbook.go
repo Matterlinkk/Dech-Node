@@ -4,25 +4,30 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Matterlinkk/Dech-Node/user"
+	"github.com/Matterlinkk/Dech-Wallet/publickey"
 	"io/ioutil"
 	"log"
 	"os"
 	"sync"
 )
 
+type TransactionReceiver struct {
+	Id        string              `json:"id"`
+	PublicKey publickey.PublicKey `json:"publicKey"`
+}
+
 type AddressBook struct {
-	AddressBook map[string]user.User //map[nickname]address
+	AddressBook map[string]TransactionReceiver // map[nickname]struct{Id string; PublicKey publickey.PublicKey}
 	sync.Mutex
 }
 
 func createAddressBook() *AddressBook {
 	return &AddressBook{
-		AddressBook: make(map[string]user.User),
+		AddressBook: make(map[string]TransactionReceiver),
 	}
 }
 
 func saveJSON(data *AddressBook, filename string) error {
-
 	jsonData, err := json.Marshal(data.AddressBook)
 	if err != nil {
 		log.Printf("Error: %s", err)
@@ -68,7 +73,7 @@ func LoadJSON(filename string) (*AddressBook, error) {
 	return data, nil
 }
 
-func AddKeyValue(key string, value user.User, filename string) {
+func AddKeyValue(nickname string, user user.User, filename string) {
 	data, err := LoadJSON(filename)
 
 	if err != nil {
@@ -76,19 +81,22 @@ func AddKeyValue(key string, value user.User, filename string) {
 		return
 	}
 
-	log.Print("After LoadJSON: ", data)
-
 	data.Mutex.Lock()
 	defer data.Mutex.Unlock()
 
-	data.AddressBook[key] = value
-
-	fmt.Print("After LoadJSON: ", data)
+	// Add the key to the map along with Id and PublicKey
+	data.AddressBook[nickname] = struct {
+		Id        string              `json:"id"`
+		PublicKey publickey.PublicKey `json:"publicKey"`
+	}{
+		Id:        user.Id,
+		PublicKey: user.PublicKey,
+	}
 
 	err = saveJSON(data, filename)
 	if err != nil {
 		log.Printf("saveJSON error: %s", err)
 	}
 
-	fmt.Printf("Added new user: %s=%s\n", key, value)
+	fmt.Printf("Added new user: %s\n", nickname)
 }

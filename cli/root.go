@@ -7,6 +7,7 @@ import (
 	"github.com/Matterlinkk/Dech-Node/routes"
 	"github.com/Matterlinkk/Dech-Node/transaction"
 	"github.com/Matterlinkk/Dech-Node/transportchan"
+	"github.com/Matterlinkk/Dech-Node/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -25,6 +26,8 @@ var rootCmd = &cobra.Command{
 
 		r := chi.NewRouter()
 
+		var loggedUser user.User
+
 		messageMap := message.CreateMessageMap()
 
 		db := block.CreateBlockchain()
@@ -40,7 +43,7 @@ var rootCmd = &cobra.Command{
 			transportchan.ProcessBlock(channelBlock, channelTnx, db, messageMap)
 		}()
 
-		routes.RegisterRoutes(r, db, channelTnx, messageMap)
+		routes.RegisterRoutes(r, db, channelTnx, messageMap, &loggedUser)
 
 		go func() {
 			if err := http.ListenAndServe(":8080", r); err != nil {
@@ -68,12 +71,12 @@ func init() {
 
 	createUserCmd.Flags().String("pk", "", "user's private key")
 	createUserCmd.Flags().String("nickname", "unknown", "user's nickname")
+	createUserCmd.Flags().String("password", "", "user's password")
 	rootCmd.AddCommand(createUserCmd)
 
 	findUserByNicknameCmd.Flags().String("nickname", "", "user's nickname")
 	rootCmd.AddCommand(findUserByNicknameCmd)
 
-	createTxCmd.Flags().String("sender", "", "sender's nickname")
 	createTxCmd.Flags().String("receiver", "", "receiver's nickname")
 	createTxCmd.Flags().String("data", "", "some data(only string now)")
 	rootCmd.AddCommand(createTxCmd)
@@ -83,4 +86,10 @@ func init() {
 	rootCmd.AddCommand(showMessage)
 
 	rootCmd.AddCommand(addressBookCmd)
+
+	rootCmd.AddCommand(UserProfileCmd)
+
+	loginUserCmd.Flags().String("nickname", "", "nickname for login")
+	loginUserCmd.Flags().String("password", "", "user's password")
+	rootCmd.AddCommand(loginUserCmd)
 }
