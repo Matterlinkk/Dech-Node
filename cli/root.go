@@ -7,7 +7,6 @@ import (
 	"github.com/Matterlinkk/Dech-Node/routes"
 	"github.com/Matterlinkk/Dech-Node/transaction"
 	"github.com/Matterlinkk/Dech-Node/transportchan"
-	"github.com/Matterlinkk/Dech-Node/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -28,8 +27,6 @@ var rootCmd = &cobra.Command{
 
 		messageMap := message.CreateMessageMap()
 
-		var UserDB []user.User
-
 		db := block.CreateBlockchain()
 
 		channelTnx := make(chan transaction.Transaction)
@@ -43,7 +40,7 @@ var rootCmd = &cobra.Command{
 			transportchan.ProcessBlock(channelBlock, channelTnx, db, messageMap)
 		}()
 
-		routes.RegisterRoutes(r, UserDB, db, channelTnx, messageMap)
+		routes.RegisterRoutes(r, db, channelTnx, messageMap)
 
 		go func() {
 			if err := http.ListenAndServe(":8080", r); err != nil {

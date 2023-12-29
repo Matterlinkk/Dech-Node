@@ -5,28 +5,24 @@ import (
 	"github.com/Matterlinkk/Dech-Node/handlers"
 	"github.com/Matterlinkk/Dech-Node/message"
 	"github.com/Matterlinkk/Dech-Node/transaction"
-	"github.com/Matterlinkk/Dech-Node/user"
 	"github.com/go-chi/chi/v5"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
 
-func RegisterRoutes(r chi.Router, UserDB []user.User, blockchain *block.Blockchain, txChan chan transaction.Transaction, messageMap *map[string][]message.Message) {
+func RegisterRoutes(r chi.Router, blockchain *block.Blockchain, txChan chan transaction.Transaction, messageMap *map[string][]message.Message) {
 
 	r.Get("/user/create", func(w http.ResponseWriter, r *http.Request) {
-		handlers.CreateUser(w, r, &UserDB)
-	})
-	r.Get("/user/list", func(w http.ResponseWriter, r *http.Request) {
-		handlers.ShowUserDatabase(w, r, UserDB)
+		handlers.CreateUser(w, r)
 	})
 
 	r.Get("/user/find/{user}", func(w http.ResponseWriter, r *http.Request) {
-		handlers.FindUser(w, r, UserDB)
+		handlers.FindUser(w, r)
 	})
 
-	r.Get("/tnx/create/{sender}/{receiver}/message", func(w http.ResponseWriter, r *http.Request) {
-		handlers.AddTnx(w, r, UserDB, txChan)
+	r.Get("/tnx/create/{sender}/{receiver}/message", func(w http.ResponseWriter, r *http.Request) { //fix after login-func
+		handlers.AddTnx(w, r, txChan)
 	})
 
 	r.Get("/blockchain/show", func(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +30,7 @@ func RegisterRoutes(r chi.Router, UserDB []user.User, blockchain *block.Blockcha
 	})
 
 	r.Get("/message/show/{from}/{to}", func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetMessage(w, r, UserDB, *messageMap)
+		handlers.GetMessage(w, r, *messageMap)
 	})
 
 	r.Get("/addressbook/show", func(w http.ResponseWriter, r *http.Request) {

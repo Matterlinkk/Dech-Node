@@ -56,12 +56,3 @@ func (u *User) IncreaseNonce() uint32 {
 func (u *User) ShowNonce() uint32 {
 	return u.nonce
 }
-
-func FindByUser(nickname string, userDB []User) User {
-	for _, u := range userDB {
-		if u.Nickname == nickname {
-			return u
-		}
-	}
-	return User{}
-}
