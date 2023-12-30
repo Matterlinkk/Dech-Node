@@ -170,9 +170,11 @@ func LoginUser(w http.ResponseWriter, r *http.Request, loggedUser *user.User) {
 
 	filename := fmt.Sprintf("%s.txt", nickname)
 
-	*loggedUser = user.ReadUserFile(filename, password)
+	*loggedUser = user.ReadUserFile(filename, password, w)
 
-	fmt.Print(*loggedUser)
+	if loggedUser.Nickname == "" {
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

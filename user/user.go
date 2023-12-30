@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/big"
+	"net/http"
 )
 
 type User struct {
@@ -51,25 +52,25 @@ func CreateUserFile(filename, password string, user User) error {
 	return nil
 }
 
-func ReadUserFile(filename, password string) User {
+func ReadUserFile(filename, password string, w http.ResponseWriter) User {
 	filePath := fmt.Sprintf("user/userfiles/%s", filename)
 
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Printf("Error reading file: %s\n", err)
+		http.Error(w, "Invalid nickname", http.StatusNotFound)
 		return User{}
 	}
 
 	decryptedData := operations.GetDecryptedString([]byte(password), string(fileData))
 	if err != nil {
-		log.Printf("Error decrypting data: %s\n", err)
+		http.Error(w, fmt.Sprintf("Error decrypting data: %s", err), http.StatusNotFound)
 		return User{}
 	}
 
 	var user User
 	err = json.Unmarshal([]byte(decryptedData), &user)
 	if err != nil {
-		log.Printf("Error parsing JSON: %s\n", err)
+		http.Error(w, "Invalid password", http.StatusNotFound)
 		return User{}
 	}
 
