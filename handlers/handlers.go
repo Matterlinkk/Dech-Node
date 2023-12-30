@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.Transaction, sender user.User) { //fix after login logic
+func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.Transaction, sender user.User) {
 	receiverStr := chi.URLParam(r, "receiver")
 
 	addressBook, err := addressbook.LoadJSON("addressbook.json")
@@ -28,17 +28,9 @@ func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.
 
 	receiver := addressBook.AddressBook[receiverStr]
 
-	log.Printf("sender: %v\n", sender)
-	log.Printf("receiver: %v\n", receiver)
-
 	message := r.URL.Query().Get("data")
 
-	log.Printf("mesage: %v\n", message)
-
 	signature := signature.SignMessage(message, sender.GetKeys())
-	log.Printf("sender.GetKeys(): %v\n", sender.GetKeys())
-
-	log.Printf("signature: %v\n", signature)
 
 	tnx := transaction.CreateTransaction(&sender, receiver, message, *signature)
 
@@ -98,7 +90,7 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		w.Write([]byte("User not found"))
 	}
-} // refactor
+}
 
 func GetMessage(w http.ResponseWriter, r *http.Request, messageMap map[string][]message.Message) {
 	fromStr := chi.URLParam(r, "from")

@@ -46,6 +46,7 @@ func saveJSON(data *AddressBook, filename string) error {
 func LoadJSON(filename string) (*AddressBook, error) {
 	fileContent, err := ioutil.ReadFile(filename)
 	if err != nil {
+		//Check if file exists
 		if os.IsNotExist(err) {
 			return createAddressBook(), nil
 		}
@@ -55,10 +56,11 @@ func LoadJSON(filename string) (*AddressBook, error) {
 
 	// Check if the file is empty
 	if len(fileContent) == 0 {
+
 		// File is empty, create a new AddressBook
 		data := createAddressBook()
 		if err := saveJSON(data, filename); err != nil {
-			return &AddressBook{}, fmt.Errorf("error creating file: %s", err)
+			return &AddressBook{}, fmt.Errorf("Error creating file: %s", err)
 		}
 		return data, nil
 	}
@@ -84,7 +86,6 @@ func AddKeyValue(nickname string, user user.User, filename string) {
 	data.Mutex.Lock()
 	defer data.Mutex.Unlock()
 
-	// Add the key to the map along with Id and PublicKey
 	data.AddressBook[nickname] = struct {
 		Id        string              `json:"id"`
 		PublicKey publickey.PublicKey `json:"publicKey"`
