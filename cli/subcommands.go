@@ -6,15 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var listUsersCmd = &cobra.Command{
-	Use:   "user/list",
-	Short: "Show all users",
-	Run: func(cmd *cobra.Command, args []string) {
-		status, text := routes.CallHandler("http://localhost:8080/user/list")
-		fmt.Printf("Status: %d\nBody:%s", status, text)
-	},
-}
-
 var blockchainCmd = &cobra.Command{
 	Use:   "blockchain/show",
 	Short: "Show array of blocks",

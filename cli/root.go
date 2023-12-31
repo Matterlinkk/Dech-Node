@@ -66,7 +66,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.AddCommand(listUsersCmd)
 	rootCmd.AddCommand(blockchainCmd)
 
 	createUserCmd.Flags().String("pk", "", "user's private key")

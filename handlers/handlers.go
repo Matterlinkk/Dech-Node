@@ -26,7 +26,13 @@ func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.
 		return
 	}
 
-	receiver := addressBook.AddressBook[receiverStr]
+	receiver, ok := addressBook.AddressBook[receiverStr]
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		responseText := fmt.Sprintf("User %s does not exist", receiverStr)
+		w.Write([]byte(responseText))
+		return
+	}
 
 	message := r.URL.Query().Get("data")
 
