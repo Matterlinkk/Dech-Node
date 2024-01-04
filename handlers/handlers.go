@@ -108,8 +108,18 @@ func GetMessage(w http.ResponseWriter, r *http.Request, messageMap map[string][]
 		return
 	}
 
-	from := addressBook.AddressBook[fromStr]
-	to := addressBook.AddressBook[toStr]
+	from, ok := addressBook.AddressBook[fromStr]
+	if !ok {
+		w.WriteHeader(404)
+		w.Write([]byte("User not found"))
+		return
+	}
+	to, ok := addressBook.AddressBook[toStr]
+	if !ok {
+		w.WriteHeader(404)
+		w.Write([]byte("User not found"))
+		return
+	}
 
 	key := from.Id + ":" + to.Id
 	messages, ok := messageMap[key]

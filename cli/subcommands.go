@@ -8,7 +8,7 @@ import (
 
 var blockchainCmd = &cobra.Command{
 	Use:   "blockchain/show",
-	Short: "Show array of blocks",
+	Short: "Show array of blocks", //   .\node.exe blockchain/show
 	Run: func(cmd *cobra.Command, args []string) {
 		status, text := routes.CallHandler("http://localhost:8080/blockchain/show")
 		fmt.Printf("Status: %d\nBody:%s", status, text)
@@ -17,7 +17,7 @@ var blockchainCmd = &cobra.Command{
 
 var createUserCmd = &cobra.Command{
 	Use:   "user/create",
-	Short: "Create user",
+	Short: "Create user", //  .\node.exe user/create --pk={privatekey} --nickname={username} --password={password}
 	Run: func(cmd *cobra.Command, args []string) {
 		pK, _ := cmd.Flags().GetString("pk")
 		nickname, _ := cmd.Flags().GetString("nickname")
@@ -30,7 +30,8 @@ var createUserCmd = &cobra.Command{
 
 var findUserByNicknameCmd = &cobra.Command{
 	Use:   "user/find",
-	Short: "Find user by nickname",
+	Short: "Find user by nickname", //.\node.exe user/find --nickname={username}
+
 	Run: func(cmd *cobra.Command, args []string) {
 		nickname, _ := cmd.Flags().GetString("nickname")
 		address := fmt.Sprintf("http://localhost:8080/user/find/%s", nickname)
@@ -41,7 +42,8 @@ var findUserByNicknameCmd = &cobra.Command{
 
 var createTxCmd = &cobra.Command{
 	Use:   "tx/create",
-	Short: "Create transaction by 2 nicknames sender and receiver",
+	Short: "Create transaction by 2 nicknames sender and receiver", // .\node tx/create --receiver={nickname} --data={some data(string only)}
+
 	Run: func(cmd *cobra.Command, args []string) {
 		receiver, _ := cmd.Flags().GetString("receiver")
 		data, _ := cmd.Flags().GetString("data")
@@ -53,7 +55,8 @@ var createTxCmd = &cobra.Command{
 
 var showMessage = &cobra.Command{
 	Use:   "message/show",
-	Short: "Show all users between 2 nicknames",
+	Short: "Show all users between 2 nicknames", // .\node message/show --from={sender's nickname} --to={receiver's nickname}
+
 	Run: func(cmd *cobra.Command, args []string) {
 		from, _ := cmd.Flags().GetString("from")
 		to, _ := cmd.Flags().GetString("to")
@@ -65,7 +68,7 @@ var showMessage = &cobra.Command{
 
 var addressBookCmd = &cobra.Command{
 	Use:   "addressbook",
-	Short: "Show map [nickname]address",
+	Short: "Show map [nickname]address", //  .\node.exe addressbook
 	Run: func(cmd *cobra.Command, args []string) {
 		status, text := routes.CallHandler("http://localhost:8080/addressbook/show")
 		fmt.Printf("Status: %d\nBody:%s", status, text)
@@ -74,7 +77,8 @@ var addressBookCmd = &cobra.Command{
 
 var UserProfileCmd = &cobra.Command{
 	Use:   "user/profile",
-	Short: "Show user which logged",
+	Short: "Show user which logged", //  .\node user/profile
+
 	Run: func(cmd *cobra.Command, args []string) {
 		status, text := routes.CallHandler("http://localhost:8080/user/profile")
 		fmt.Printf("Status: %d\nBody:%s", status, text)
@@ -83,7 +87,8 @@ var UserProfileCmd = &cobra.Command{
 
 var loginUserCmd = &cobra.Command{
 	Use:   "user/login",
-	Short: "Login user",
+	Short: "Login user", // .\node user/login --nickname={nickname} --password={password}
+
 	Run: func(cmd *cobra.Command, args []string) {
 		nickname, _ := cmd.Flags().GetString("nickname")
 		password, _ := cmd.Flags().GetString("password")

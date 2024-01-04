@@ -2,6 +2,8 @@ github.com/Matterlinkk/Dech-Wallet v1.3.4 h1:P1fEYWzY4lk8xY4MvZcJ7enZkOMVgKZUqYH
 github.com/Matterlinkk/Dech-Wallet v1.3.4/go.mod h1:e7hy64XKlXYCC+dhJPfUl8ump9dGB7sKj5AjbClPUO4=
 github.com/Matterlinkk/Dech-Wallet v1.3.5 h1:26I24WQp4HBPa47VrItTNG2jhLkVS2PBQmNcC49a1OM=
 github.com/Matterlinkk/Dech-Wallet v1.3.5/go.mod h1:e7hy64XKlXYCC+dhJPfUl8ump9dGB7sKj5AjbClPUO4=
+github.com/Matterlinkk/Dech-Wallet v1.3.6 h1:NiBNkFCzL7TSAzKEv2OJQN5fpglfQ7RSULNHZy3yh9E=
+github.com/Matterlinkk/Dech-Wallet v1.3.6/go.mod h1:e7hy64XKlXYCC+dhJPfUl8ump9dGB7sKj5AjbClPUO4=
 github.com/aead/siphash v1.0.1/go.mod h1:Nywa3cDsYNNK3gaciGTWPwHt0wlpNV15vwmswBAUSII=
 github.com/btcsuite/btcd v0.20.1-beta/go.mod h1:wVuoA8VJLEcwgqHBwHmzLRazpKxTv13Px/pDuV7OomQ=
 github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f/go.mod h1:TdznJufoqS23FtqVCzL0ZqgP5MqXbb4fg/WgDys70nA=

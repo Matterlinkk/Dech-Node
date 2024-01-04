@@ -3,7 +3,7 @@ module github.com/Matterlinkk/Dech-Node
 go 1.21.3
 
 require (
-	github.com/Matterlinkk/Dech-Wallet v1.3.5
+	github.com/Matterlinkk/Dech-Wallet v1.3.6
 	github.com/go-chi/chi v1.5.5
 )
 
