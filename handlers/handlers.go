@@ -11,13 +11,23 @@ import (
 	"github.com/Matterlinkk/Dech-Node/user"
 	"github.com/Matterlinkk/Dech-Wallet/signature"
 	"github.com/go-chi/chi/v5"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
 	"strings"
 )
 
-func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.Transaction, sender user.User) {
+// @Summary Creates a transaction with a text message
+// @Description Creates a transaction with a text message for transmission from sender to receiver.
+// @ID AddTnxWithText
+// @Tags transactions
+// @Param receiver path string true "Receiver's name"
+// @Param data query string true "Text data"
+// @Success 201 {string} string "Transaction successfully sent"
+// @Failure 400 {string} string "Request error"
+// @Router /tnx/create/{receiver}/text [get]
+func AddTnxWithText(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.Transaction, sender user.User) {
 	receiverStr := chi.URLParam(r, "receiver")
 
 	addressBook, err := addressbook.LoadJSON("addressbook.json")
@@ -38,14 +48,98 @@ func AddTnx(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.
 
 	signature := signature.SignMessage(message, sender.GetKeys())
 
-	tnx := transaction.CreateTransaction(&sender, receiver, message, *signature)
+	tnx := transaction.CreateTransaction(&sender, receiver, []byte(message), *signature)
 
 	transportchan.TnxToBlock(tnxChannel, *tnx)
 
 	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Transaction successfully sent"))
 }
 
+// @Summary Creates a transaction with a media file
+// @Description Creates a transaction with a media file for transmission from sender to receiver.
+// @ID AddTnxWithMultimedia
+// @Tags transactions
+// @Param receiver path string true "Recipient's name"
+// @Param file formData file true "Multimedia file for transmission"
+// @Success 201 {string} string "Transaction successfully sent"
+// @Failure 400 {string} string "Request error"
+// @Failure 404 {string} string "User not found"
+// @Failure 413 {string} string "The file is too big"
+// @Failure 500 {string} string "Internal server error"
+// @Router /tnx/create/{receiver}/media [post]
+func AddTnxWithMultimedia(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.Transaction, sender user.User) {
+
+	const maxUploadSize = 15 << 20
+
+	receiverStr := chi.URLParam(r, "receiver")
+
+	addressBook, err := addressbook.LoadJSON("addressbook.json")
+	if err != nil {
+		log.Printf("Error json-loading: %s", err)
+		return
+	}
+
+	receiver, ok := addressBook.AddressBook[receiverStr]
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		responseText := fmt.Sprintf("User %s does not exist", receiverStr)
+		w.Write([]byte(responseText))
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize) //15MB max size
+
+	err = r.ParseMultipartForm(maxUploadSize)
+	if err != nil {
+		errorStr := fmt.Sprintf("ParseMultipartForm error: %s", err)
+		http.Error(w, errorStr, http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Error when retrieving a file from a form", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	if handler.Size > maxUploadSize {
+		http.Error(w, "The file is too big", http.StatusBadRequest)
+		return
+	}
+
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		responseText := "Error reading file data"
+		w.Write([]byte(responseText))
+		return
+	}
+
+	signature := signature.SignMessage(string(fileBytes), sender.GetKeys())
+
+	tnx := transaction.CreateTransaction(&sender, receiver, fileBytes, *signature)
+
+	transportchan.TnxToBlock(tnxChannel, *tnx)
+
+	w.Header().Set("Content-Type", "multipart/form-data")
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("Transaction successfully sent"))
+}
+
+// CreateUser creates a new user with the provided public key, nickname, and password.
+// @Summary Create a new user
+// @Description Endpoint to create a new user with the provided public key, nickname, and password.
+// @ID CreateUser
+// @Tags users
+// @Param pk query string true "Public key of the user (base-10 string)"
+// @Param nickname query string true "Nickname for the new user"
+// @Param password query string true "Password for the new user"
+// @Success 200 {string} string "User successfully created"
+// @Failure 400 {string} string "Bad Request"
+// @Router /user/create [post]
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	pkString := r.URL.Query().Get("pk")
@@ -65,6 +159,13 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User successfully сreated"))
 }
 
+// ShowBlockchain returns the blockchain data in a plain text format.
+// @Summary Show blockchain data
+// @Description Endpoint to retrieve and display the blockchain data in plain text format.
+// @ID ShowBlockchain
+// @Tags blockchain
+// @Success 200 {string} string "Blockchain data successfully retrieved"
+// @Router /blockchain/show [get]
 func ShowBlockchain(w http.ResponseWriter, r *http.Request, db *block.Blockchain) {
 
 	dbJson, _ := json.Marshal(db)
@@ -75,6 +176,15 @@ func ShowBlockchain(w http.ResponseWriter, r *http.Request, db *block.Blockchain
 	w.Write([]byte(dbString))
 }
 
+// FindUser retrieves information about a user based on the provided username.
+// @Summary Find user by username
+// @Description Endpoint to find and display user information based on the provided username.
+// @ID FindUser
+// @Tags users
+// @Param user path string true "Username of the user to find"
+// @Success 200 {string} string "User information successfully retrieved"
+// @Failure 404 {string} string "User not found"
+// @Router /user/find/{user} [get]
 func FindUser(w http.ResponseWriter, r *http.Request) {
 
 	user := chi.URLParam(r, "user")
@@ -98,9 +208,18 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetMessage(w http.ResponseWriter, r *http.Request, messageMap map[string][]message.Message) {
+// GetMessage retrieves messages between the logged-in user and the specified sender.
+// @Summary Get messages between users
+// @Description Endpoint to retrieve and display messages between the logged-in user and the specified sender.
+// @ID GetMessage
+// @Tags messages
+// @Param from path string true "Username of the sender"
+// @Success 200 {string} string "Messages successfully retrieved"
+// @Failure 404 {string} string "User not found"
+// @Failure 500 {string} string "Error encoding JSON"
+// @Router /message/show/{from} [get]
+func GetMessage(w http.ResponseWriter, r *http.Request, messageMap map[string][]message.Message, loggedUser user.User) {
 	fromStr := chi.URLParam(r, "from")
-	toStr := chi.URLParam(r, "to")
 
 	addressBook, err := addressbook.LoadJSON("addressbook.json")
 	if err != nil {
@@ -114,14 +233,8 @@ func GetMessage(w http.ResponseWriter, r *http.Request, messageMap map[string][]
 		w.Write([]byte("User not found"))
 		return
 	}
-	to, ok := addressBook.AddressBook[toStr]
-	if !ok {
-		w.WriteHeader(404)
-		w.Write([]byte("User not found"))
-		return
-	}
 
-	key := from.Id + ":" + to.Id
+	key := from.Id + ":" + loggedUser.Id
 	messages, ok := messageMap[key]
 	if !ok {
 		http.Error(w, "No messages found", http.StatusNotFound)
@@ -131,7 +244,7 @@ func GetMessage(w http.ResponseWriter, r *http.Request, messageMap map[string][]
 	var messagesStrings []string
 
 	for _, msg := range messages {
-		messagesStrings = append(messagesStrings, msg.ShowString())
+		messagesStrings = append(messagesStrings, msg.ShowString(loggedUser, from))
 	}
 
 	msgJson, err := json.Marshal(messagesStrings)
@@ -145,6 +258,14 @@ func GetMessage(w http.ResponseWriter, r *http.Request, messageMap map[string][]
 	w.Write(msgJson)
 }
 
+// ShowAddressBook returns the address book entries in JSON format.
+// @Summary Get address book entries
+// @Description Endpoint to retrieve and display entries from the address book in JSON format.
+// @ID ShowAddressBook
+// @Tags address book
+// @Success 200 {string} string "Address book entries successfully retrieved"
+// @Failure 500 {string} string "Error creating JSON response"
+// @Router /addressbook/show [get]
 func ShowAddressBook(w http.ResponseWriter, r *http.Request, filename string) {
 	data, err := addressbook.LoadJSON(filename)
 	if err != nil {
@@ -172,6 +293,16 @@ func ShowAddressBook(w http.ResponseWriter, r *http.Request, filename string) {
 	w.Write(jsonResponse)
 }
 
+// LoginUser authenticates a user based on the provided nickname and password.
+// @Summary Authenticate user
+// @Description Endpoint to authenticate a user based on the provided nickname and password.
+// @ID LoginUser
+// @Tags authentication
+// @Param nickname path string true "User nickname"
+// @Param password query string true "User password"
+// @Success 200 {string} string "Access accepted"
+// @Failure 401 {string} string "Access denied"
+// @Router /user/login/{nickname} [get]
 func LoginUser(w http.ResponseWriter, r *http.Request, loggedUser *user.User) {
 	nickname := chi.URLParam(r, "nickname")
 	password := r.URL.Query().Get("password")
@@ -190,6 +321,14 @@ func LoginUser(w http.ResponseWriter, r *http.Request, loggedUser *user.User) {
 	w.Write([]byte(inputText))
 }
 
+// ShowUserProfile retrieves and displays the profile of the logged-in user.
+// @Summary Show user profile
+// @Description Endpoint to retrieve and display the profile of the logged-in user.
+// @ID ShowUserProfile
+// @Tags users
+// @Success 200 {string} string "User profile retrieved successfully"
+// @Failure 401 {string} string "User not authenticated"
+// @Router /user/profile [get]
 func ShowUserProfile(w http.ResponseWriter, r *http.Request, loggedUser *user.User) {
 	jsonResponse, err := json.Marshal(loggedUser)
 	if err != nil {

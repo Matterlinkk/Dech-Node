@@ -46,21 +46,21 @@ func saveJSON(data *AddressBook, filename string) error {
 func LoadJSON(filename string) (*AddressBook, error) {
 	fileContent, err := ioutil.ReadFile(filename)
 	if err != nil {
-		//Check if file exists
+		//Check if data exists
 		if os.IsNotExist(err) {
 			return createAddressBook(), nil
 		}
 		log.Printf("Error ReadFile: %s", err)
-		return &AddressBook{}, fmt.Errorf("error reading file: %s", err)
+		return &AddressBook{}, fmt.Errorf("error reading data: %s", err)
 	}
 
-	// Check if the file is empty
+	// Check if the data is empty
 	if len(fileContent) == 0 {
 
 		// File is empty, create a new AddressBook
 		data := createAddressBook()
 		if err := saveJSON(data, filename); err != nil {
-			return &AddressBook{}, fmt.Errorf("Error creating file: %s", err)
+			return &AddressBook{}, fmt.Errorf("Error creating data: %s", err)
 		}
 		return data, nil
 	}

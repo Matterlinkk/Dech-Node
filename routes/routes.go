@@ -14,7 +14,7 @@ import (
 
 func RegisterRoutes(r chi.Router, blockchain *block.Blockchain, txChan chan transaction.Transaction, messageMap *map[string][]message.Message, loggedUser *user.User) {
 
-	r.Get("/user/create", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/user/create", func(w http.ResponseWriter, r *http.Request) {
 		handlers.CreateUser(w, r)
 	})
 
@@ -31,16 +31,20 @@ func RegisterRoutes(r chi.Router, blockchain *block.Blockchain, txChan chan tran
 		handlers.ShowUserProfile(w, r, loggedUser)
 	})
 
-	r.Get("/tnx/create/{receiver}/message", func(w http.ResponseWriter, r *http.Request) { //fix after login-func
-		handlers.AddTnx(w, r, txChan, *loggedUser)
+	r.Post("/tnx/create/{receiver}/media", func(w http.ResponseWriter, r *http.Request) {
+		handlers.AddTnxWithMultimedia(w, r, txChan, *loggedUser)
+	})
+
+	r.Get("/tnx/create/{receiver}/text", func(w http.ResponseWriter, r *http.Request) {
+		handlers.AddTnxWithText(w, r, txChan, *loggedUser)
 	})
 
 	r.Get("/blockchain/show", func(w http.ResponseWriter, r *http.Request) {
 		handlers.ShowBlockchain(w, r, blockchain)
 	})
 
-	r.Get("/message/show/{from}/{to}", func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetMessage(w, r, *messageMap)
+	r.Get("/message/show/{from}", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetMessage(w, r, *messageMap, *loggedUser)
 	})
 
 	r.Get("/addressbook/show", func(w http.ResponseWriter, r *http.Request) {

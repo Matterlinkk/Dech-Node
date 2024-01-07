@@ -11,6 +11,7 @@ import (
 	"github.com/Matterlinkk/Dech-Wallet/publickey"
 	s "github.com/Matterlinkk/Dech-Wallet/signature"
 	"time"
+	"unicode"
 )
 
 type Transaction struct {
@@ -26,9 +27,9 @@ type Transaction struct {
 	Signature     s.Signature
 }
 
-func CreateTransaction(sender *user.User, receiver addressbook.TransactionReceiver, data string, signature s.Signature) *Transaction {
+func CreateTransaction(sender *user.User, receiver addressbook.TransactionReceiver, data []byte, signature s.Signature) *Transaction {
 
-	verify := s.VerifySignature(signature, data, sender.PublicKey.PublicKey)
+	verify := s.VerifySignature(signature, string(data), sender.PublicKey.PublicKey)
 
 	if !verify {
 		return nil
@@ -38,12 +39,12 @@ func CreateTransaction(sender *user.User, receiver addressbook.TransactionReceiv
 
 	secret := keys.GetSharedSecret(receiver.PublicKey, sender.PrivateKey)
 
-	encryptedMessage := operations.GetEncryptedString(secret.Bytes(), data)
+	encryptedMessage := operations.GetEncryptedString(secret.Bytes(), string(data))
 
 	message := fmt.Sprintf("%v%v%v%v%s", timing, sender.Id, receiver.Id, sender.Nonce, encryptedMessage)
 	transactionHash := fmt.Sprintf("%x", hash.SHA1(message))
 
-	dt := CheckType(data)
+	dt := checkType(data)
 
 	sender.IncreaseNonce()
 
@@ -69,12 +70,18 @@ func TransactionsKeyPair(tnx []Transaction) (string, error) {
 	return string(jsonData), nil
 }
 
-func CheckType(value interface{}) string {
-	switch value.(type) {
-	case string:
-		return "string"
-	default:
-		return "Unknown type"
+func isText(text []byte) bool {
+	for _, char := range string(text) {
+		if !unicode.IsGraphic(char) {
+			return false
+		}
 	}
-	//need finalize
+	return true
+}
+
+func checkType(data []byte) string {
+	if isText(data) {
+		return "string"
+	}
+	return "unknown"
 }

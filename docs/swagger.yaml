@@ -1,0 +1,230 @@
+info:
+  contact: {}
+paths:
+  /addressbook/show:
+    get:
+      description: Endpoint to retrieve and display entries from the address book
+        in JSON format.
+      operationId: ShowAddressBook
+      responses:
+        "200":
+          description: Address book entries successfully retrieved
+          schema:
+            type: string
+        "500":
+          description: Error creating JSON response
+          schema:
+            type: string
+      summary: Get address book entries
+      tags:
+      - address book
+  /blockchain/show:
+    get:
+      description: Endpoint to retrieve and display the blockchain data in plain text
+        format.
+      operationId: ShowBlockchain
+      responses:
+        "200":
+          description: Blockchain data successfully retrieved
+          schema:
+            type: string
+      summary: Show blockchain data
+      tags:
+      - blockchain
+  /message/show/{from}:
+    get:
+      description: Endpoint to retrieve and display messages between the logged-in
+        user and the specified sender.
+      operationId: GetMessage
+      parameters:
+      - description: Username of the sender
+        in: path
+        name: from
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Messages successfully retrieved
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+        "500":
+          description: Error encoding JSON
+          schema:
+            type: string
+      summary: Get messages between users
+      tags:
+      - messages
+  /tnx/create/{receiver}/media:
+    post:
+      description: Creates a transaction with a media file for transmission from sender
+        to receiver.
+      operationId: AddTnxWithMultimedia
+      parameters:
+      - description: Recipient's name
+        in: path
+        name: receiver
+        required: true
+        type: string
+      - description: Multimedia file for transmission
+        in: formData
+        name: file
+        required: true
+        type: file
+      responses:
+        "201":
+          description: Transaction successfully sent
+          schema:
+            type: string
+        "400":
+          description: Request error
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+        "413":
+          description: The file is too big
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Creates a transaction with a media file
+      tags:
+      - transactions
+  /tnx/create/{receiver}/text:
+    get:
+      description: Creates a transaction with a text message for transmission from
+        sender to receiver.
+      operationId: AddTnxWithText
+      parameters:
+      - description: Receiver's name
+        in: path
+        name: receiver
+        required: true
+        type: string
+      - description: Text data
+        in: query
+        name: data
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Transaction successfully sent
+          schema:
+            type: string
+        "400":
+          description: Request error
+          schema:
+            type: string
+      summary: Creates a transaction with a text message
+      tags:
+      - transactions
+  /user/create:
+    post:
+      description: Endpoint to create a new user with the provided public key, nickname,
+        and password.
+      operationId: CreateUser
+      parameters:
+      - description: Public key of the user (base-10 string)
+        in: query
+        name: pk
+        required: true
+        type: string
+      - description: Nickname for the new user
+        in: query
+        name: nickname
+        required: true
+        type: string
+      - description: Password for the new user
+        in: query
+        name: password
+        required: true
+        type: string
+      responses:
+        "200":
+          description: User successfully created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Create a new user
+      tags:
+      - users
+  /user/find/{user}:
+    get:
+      description: Endpoint to find and display user information based on the provided
+        username.
+      operationId: FindUser
+      parameters:
+      - description: Username of the user to find
+        in: path
+        name: user
+        required: true
+        type: string
+      responses:
+        "200":
+          description: User information successfully retrieved
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+      summary: Find user by username
+      tags:
+      - users
+  /user/login/{nickname}:
+    get:
+      description: Endpoint to authenticate a user based on the provided nickname
+        and password.
+      operationId: LoginUser
+      parameters:
+      - description: User nickname
+        in: path
+        name: nickname
+        required: true
+        type: string
+      - description: User password
+        in: query
+        name: password
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Access accepted
+          schema:
+            type: string
+        "401":
+          description: Access denied
+          schema:
+            type: string
+      summary: Authenticate user
+      tags:
+      - authentication
+  /user/profile:
+    get:
+      description: Endpoint to retrieve and display the profile of the logged-in user.
+      operationId: ShowUserProfile
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          schema:
+            type: string
+        "401":
+          description: User not authenticated
+          schema:
+            type: string
+      summary: Show user profile
+      tags:
+      - users
+swagger: "2.0"
+host: localhost:8080
