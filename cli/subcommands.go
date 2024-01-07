@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"github.com/Matterlinkk/Dech-Node/routes"
 	"github.com/spf13/cobra"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 var blockchainCmd = &cobra.Command{
@@ -23,8 +26,26 @@ var createUserCmd = &cobra.Command{
 		nickname, _ := cmd.Flags().GetString("nickname")
 		password, _ := cmd.Flags().GetString("password")
 		address := fmt.Sprintf("http://localhost:8080/user/create?pk=%s&nickname=%s&password=%s", pK, nickname, password)
-		status, text := routes.CallHandler(address)
-		fmt.Printf("Status: %d\nBody:%s", status, text)
+		request, err := http.NewRequest("POST", address, nil)
+		if err != nil {
+			log.Printf("Error creating request: %s", err)
+			return
+		}
+
+		response, err := http.DefaultClient.Do(request)
+		if err != nil {
+			log.Printf("Error making %s request: %s", "POST", err)
+			return
+		}
+		defer response.Body.Close()
+
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Printf("Error reading response body: %s", err)
+			return
+		}
+
+		fmt.Printf("Status: %d\nBody:%s", response.StatusCode, string(body))
 	},
 }
 
