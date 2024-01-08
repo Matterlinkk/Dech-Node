@@ -15,6 +15,8 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -26,6 +28,7 @@ import (
 // @Param data query string true "Text data"
 // @Success 201 {string} string "Transaction successfully sent"
 // @Failure 400 {string} string "Request error"
+// @Failure 409 {string} string "Transaction declined"
 // @Router /tnx/create/{receiver}/text [get]
 func AddTnxWithText(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.Transaction, sender user.User) {
 	receiverStr := chi.URLParam(r, "receiver")
@@ -49,12 +52,46 @@ func AddTnxWithText(w http.ResponseWriter, r *http.Request, tnxChannel chan tran
 	signature := signature.SignMessage(message, sender.GetKeys())
 
 	tnx := transaction.CreateTransaction(&sender, receiver, []byte(message), *signature)
+	if tnx == nil {
+		w.WriteHeader(http.StatusConflict)
+		responseText := fmt.Sprintf("Transaction declined", receiverStr)
+		w.Write([]byte(responseText))
+		return
+	}
 
 	transportchan.TnxToBlock(tnxChannel, *tnx)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Transaction successfully sent"))
+}
+
+// UploadMedia is a handler that serves an HTML form for uploading media.
+// @Summary Serves an HTML form for uploading media.
+// @Description This endpoint serves an HTML form for users to upload media files.
+// @ID UploadMedia
+// @Tags media
+// @Success 200 {string} string "HTML form successfully served"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /upload/media [get]
+func UploadMedia(w http.ResponseWriter, r *http.Request) {
+	dir, err := filepath.Abs(filepath.Dir("Dech-Node"))
+	if err != nil {
+		http.Error(w, "Unable to determine file path", http.StatusInternalServerError)
+		return
+	}
+
+	htmlPath := filepath.Join(dir, "html", "upload-file.html")
+
+	htmlContent, err := ioutil.ReadFile(htmlPath)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unable to read HTML file: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+
+	w.Write(htmlContent)
 }
 
 // @Summary Creates a transaction with a media file
@@ -67,13 +104,14 @@ func AddTnxWithText(w http.ResponseWriter, r *http.Request, tnxChannel chan tran
 // @Failure 400 {string} string "Request error"
 // @Failure 404 {string} string "User not found"
 // @Failure 413 {string} string "The file is too big"
+// @Failure 409 {string} string "Transaction declined(unknown file format)"
 // @Failure 500 {string} string "Internal server error"
 // @Router /tnx/create/{receiver}/media [post]
 func AddTnxWithMultimedia(w http.ResponseWriter, r *http.Request, tnxChannel chan transaction.Transaction, sender user.User) {
 
 	const maxUploadSize = 15 << 20
 
-	receiverStr := chi.URLParam(r, "receiver")
+	receiverStr := r.FormValue("receiver")
 
 	addressBook, err := addressbook.LoadJSON("addressbook.json")
 	if err != nil {
@@ -104,6 +142,7 @@ func AddTnxWithMultimedia(w http.ResponseWriter, r *http.Request, tnxChannel cha
 		return
 	}
 	defer file.Close()
+	fmt.Println("Filename: ", handler.Filename, "\nFile size: ", handler.Size, "\nReceiver's name: ", receiverStr)
 
 	if handler.Size > maxUploadSize {
 		http.Error(w, "The file is too big", http.StatusBadRequest)
@@ -118,13 +157,21 @@ func AddTnxWithMultimedia(w http.ResponseWriter, r *http.Request, tnxChannel cha
 		return
 	}
 
+	fmt.Println("Bytes: ", fileBytes[:40])
+
 	signature := signature.SignMessage(string(fileBytes), sender.GetKeys())
 
 	tnx := transaction.CreateTransaction(&sender, receiver, fileBytes, *signature)
+	if tnx == nil {
+		w.WriteHeader(http.StatusConflict)
+		responseText := fmt.Sprintf("Transaction declined(unknown file format)", receiverStr)
+		w.Write([]byte(responseText))
+		return
+	}
 
 	transportchan.TnxToBlock(tnxChannel, *tnx)
 
-	w.Header().Set("Content-Type", "multipart/form-data")
+	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Transaction successfully sent"))
 }
@@ -339,4 +386,47 @@ func ShowUserProfile(w http.ResponseWriter, r *http.Request, loggedUser *user.Us
 	w.Header().Set("Content-Type", "application/json")
 
 	w.Write(jsonResponse)
+}
+
+func GetLastMediaFile(w http.ResponseWriter, r *http.Request, loggedUser user.User, messageMap map[string][]message.Message) {
+	fromStr := chi.URLParam(r, "from")
+
+	addressBook, err := addressbook.LoadJSON("addressbook.json")
+	if err != nil {
+		log.Printf("Error json-loading: %s", err)
+		return
+	}
+
+	from, ok := addressBook.AddressBook[fromStr]
+	if !ok {
+		w.WriteHeader(404)
+		w.Write([]byte("User not found"))
+		return
+	}
+
+	key := from.Id + ":" + loggedUser.Id
+	messages, ok := messageMap[key]
+	if !ok {
+		http.Error(w, "No messages found", http.StatusNotFound)
+		return
+	}
+
+	var message message.Message
+
+	for _, msg := range messages {
+		if msg.ShowDataType() != "text" {
+			message = msg
+		}
+	}
+
+	bytes := []byte(message.ShowData(loggedUser, from))
+
+	contentType := http.DetectContentType(bytes)
+
+	w.Header().Set("Content-Disposition", "attachment; filename=")
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Length", strconv.Itoa(len(bytes)))
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(bytes)
 }

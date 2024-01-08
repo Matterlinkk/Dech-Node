@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/Matterlinkk/Dech-Node/addressbook"
@@ -21,8 +22,8 @@ type Transaction struct {
 	FromPublicKey publickey.PublicKey
 	ToAddress     string
 	ToPublicKey   publickey.PublicKey
-	Data          string
 	DataType      string
+	Data          string
 	Nonce         uint32
 	Signature     s.Signature
 }
@@ -45,6 +46,9 @@ func CreateTransaction(sender *user.User, receiver addressbook.TransactionReceiv
 	transactionHash := fmt.Sprintf("%x", hash.SHA1(message))
 
 	dt := checkType(data)
+	if dt == "unknown" {
+		return nil
+	}
 
 	sender.IncreaseNonce()
 
@@ -81,7 +85,15 @@ func isText(text []byte) bool {
 
 func checkType(data []byte) string {
 	if isText(data) {
-		return "string"
+		return "text"
+	} else if bytes.Equal(data[:2], []byte{255, 216}) {
+		return ".jpg"
+	} else if bytes.Equal(data[:8], []byte{137, 80, 78, 71, 13, 10, 26, 10}) {
+		return ".png"
+	} else if bytes.Equal(data[:3], []byte{73, 68, 51}) {
+		return ".mp3"
+	} else if bytes.Equal(data[:8], []byte{0, 0, 0, 24, 102, 116, 121, 112}) {
+		return ".mp4"
 	}
 	return "unknown"
 }

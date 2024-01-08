@@ -194,6 +194,30 @@ const docTemplate = `{
                 }
             }
         },
+        "/upload-media": {
+            "get": {
+                "description": "This endpoint serves an HTML form for users to upload media files.",
+                "tags": [
+                    "media"
+                ],
+                "summary": "Serves an HTML form for uploading media.",
+                "operationId": "UploadMedia",
+                "responses": {
+                    "200": {
+                        "description": "HTML form successfully served",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/user/create": {
             "post": {
                 "description": "Endpoint to create a new user with the provided public key, nickname, and password.",

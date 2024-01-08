@@ -12,16 +12,25 @@ import (
 )
 
 type Message struct {
-	data []byte
-	date time.Time
+	dataType string
+	data     []byte
+	date     time.Time
 }
 
 func CreateMessage(data []byte, transaction transaction.Transaction) Message {
 
 	return Message{
-		data: data,
-		date: transaction.Time,
+		dataType: transaction.DataType,
+		data:     data,
+		date:     transaction.Time,
 	}
+}
+
+func (message Message) ShowData(user user.User, fromUser addressbook.TransactionReceiver) string {
+
+	secret := keys.GetSharedSecret(fromUser.PublicKey, user.PrivateKey)
+
+	return operations.GetDecryptedString(secret.Bytes(), string(message.data))
 }
 
 func (message Message) ShowString(user user.User, fromUser addressbook.TransactionReceiver) string {
@@ -32,7 +41,11 @@ func (message Message) ShowString(user user.User, fromUser addressbook.Transacti
 
 	secret := keys.GetSharedSecret(fromUser.PublicKey, user.PrivateKey)
 
-	return text[:index] + " " + string(operations.GetDecryptedString(secret.Bytes(), string(message.data)))
+	return text[:index] + " " + operations.GetDecryptedString(secret.Bytes(), string(message.data))
+}
+
+func (message Message) ShowDataType() string {
+	return message.dataType
 }
 
 func CreateMessageMap() *map[string][]Message {

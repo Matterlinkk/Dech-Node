@@ -47,8 +47,20 @@ func RegisterRoutes(r chi.Router, blockchain *block.Blockchain, txChan chan tran
 		handlers.GetMessage(w, r, *messageMap, *loggedUser)
 	})
 
+	r.Get("/message/show/{from}/media", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetLastMediaFile(w, r, *loggedUser, *messageMap)
+	})
+
 	r.Get("/addressbook/show", func(w http.ResponseWriter, r *http.Request) {
 		handlers.ShowAddressBook(w, r, "addressbook.json")
+	})
+
+	r.Get("/upload/media", func(w http.ResponseWriter, r *http.Request) {
+		handlers.UploadMedia(w, r)
+	})
+
+	r.Post("/upload", func(w http.ResponseWriter, r *http.Request) {
+		handlers.AddTnxWithMultimedia(w, r, txChan, *loggedUser)
 	})
 }
 
